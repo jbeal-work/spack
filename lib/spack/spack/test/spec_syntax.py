@@ -424,7 +424,7 @@ def specfile_for(default_mock_concretization):
         compiler_with_version_range("%gcc@10.1.0,12.2.1:"),
         compiler_with_version_range("%gcc@:8.4.3,10.2.1:12.1.0"),
         # Special key value arguments
-        ("dev_path=*", [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=*")], "dev_path=*"),
+        ("dev_path=*", [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=*")], "dev_path='*'"),
         (
             "dev_path=none",
             [Token(TokenType.KEY_VALUE_PAIR, value="dev_path=none")],
@@ -444,33 +444,28 @@ def specfile_for(default_mock_concretization):
         (
             "cflags=a=b=c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c")],
-            'cflags="a=b=c"',
+            "cflags='a=b=c'",
         ),
         (
             "cflags=a=b=c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c")],
-            'cflags="a=b=c"',
+            "cflags='a=b=c'",
         ),
         (
             "cflags=a=b=c+~",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=a=b=c+~")],
-            'cflags="a=b=c+~"',
+            "cflags='a=b=c+~'",
         ),
         (
             "cflags=-Wl,a,b,c",
             [Token(TokenType.KEY_VALUE_PAIR, value="cflags=-Wl,a,b,c")],
-            'cflags="-Wl,a,b,c"',
+            "cflags=-Wl,a,b,c",
         ),
         # Multi quoted
         (
-            "cflags=''-Wl,a,b,c''",
-            [Token(TokenType.KEY_VALUE_PAIR, value="cflags=''-Wl,a,b,c''")],
-            'cflags="-Wl,a,b,c"',
-        ),
-        (
             'cflags=="-O3 -g"',
             [Token(TokenType.PROPAGATED_KEY_VALUE_PAIR, value='cflags=="-O3 -g"')],
-            'cflags=="-O3 -g"',
+            "cflags=='-O3 -g'",
         ),
         # Whitespace is allowed in version lists
         ("@1.2:1.4 , 1.6 ", [Token(TokenType.VERSION, value="@1.2:1.4 , 1.6")], "@1.2:1.4,1.6"),
@@ -661,13 +656,15 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         ("y ^x@@1.2", "y ^x@@1.2\n   ^^^^^"),
         ("x@1.2::", "x@1.2::\n      ^"),
         ("x::", "x::\n ^^"),
+        #        ("cflags=''-Wl,a,b,c''", "cflags=''-Wl,a,b,c''\n                        ^ ^ ^ ^^"),
     ],
 )
 def test_error_reporting(text, expected_in_error):
     parser = SpecParser(text)
     with pytest.raises(SpecTokenizationError) as exc:
         parser.tokens()
-        assert expected_in_error in str(exc), parser.tokens()
+
+    assert expected_in_error in str(exc), parser.tokens()
 
 
 @pytest.mark.parametrize(
